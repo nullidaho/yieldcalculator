@@ -85,6 +85,7 @@
         }
         .metric-nc { border-left-color: #e74c3c; }
         .metric-dm { border-left-color: #2ecc71; }
+        .metric-content { border-left-color: #f39c12; }
         
         .metric-title {
             font-size: 14px;
@@ -193,6 +194,12 @@
             <div class="metric-value" id="out_dm">0</div>
             <div class="metric-unit">kg/ha</div>
         </div>
+        <div class="main-metric metric-content">
+            <div class="metric-title">Nitrogen Content</div>
+            <div class="metric-value" id="out_ncontent">0</div>
+            <div class="metric-unit">g N / kg DM</div>
+        </div>
+    </div>
     </div>
 
     <div class="intermediate-values">
@@ -279,6 +286,8 @@
         document.getElementById('out_alpha2').innerText = currentRes.alpha_2.toFixed(1);
         document.getElementById('out_nc').innerText = currentRes.N_c.toFixed(1);
         document.getElementById('out_dm').innerText = currentRes.DM_Yield.toFixed(0);
+        const nContent = currentRes.DM_Yield > 0 ? (currentRes.N_c * 1000) / currentRes.DM_Yield : 0;
+        document.getElementById('out_ncontent').innerText = nContent.toFixed(1);
 
         // 2. Generate data points for the curves (from 0 to 800 kg/ha N)
         const labels = [];
