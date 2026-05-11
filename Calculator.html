@@ -136,7 +136,7 @@
     
     <div class="controls-grid">
         <div class="form-group" style="grid-column: 1 / -1; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 5px;">
-            <label style="font-size: 16px;">Target Nitrogen Applied (kg/ha): <span class="slider-val" id="n_val">170</span></label>
+            <label style="font-size: 16px;">Target Nitrogen Applied (kg/ha/yr): <span class="slider-val" id="n_val">170</span></label>
             <input type="range" id="N_application" min="0" max="800" value="200" step="10" oninput="updateVal('n_val', this.value); updateDashboard();">
         </div>
         
@@ -187,12 +187,12 @@
         <div class="main-metric metric-nc">
             <div class="metric-title">Calculated Nitrogen Uptake (Nc)</div>
             <div class="metric-value" id="out_nc">0</div>
-            <div class="metric-unit">kg/ha</div>
+            <div class="metric-unit">kg/ha/yr</div>
         </div>
         <div class="main-metric metric-dm">
             <div class="metric-title">Theoretical Dry Matter Yield</div>
             <div class="metric-value" id="out_dm">0</div>
-            <div class="metric-unit">kg/ha</div>
+            <div class="metric-unit">kg/ha/yr</div>
         </div>
         <div class="main-metric metric-content">
             <div class="metric-title">Nitrogen Content</div>
@@ -202,9 +202,9 @@
     </div>
 
     <div class="intermediate-values">
-        <div class="intermediate-item">Soil N Supply (α0): <span id="out_alpha0">0</span> kg/ha</div>
-        <div class="intermediate-item">Max N Uptake (α1): <span id="out_alpha1">0</span> kg/ha</div>
-        <div class="intermediate-item">Immobilisation (α2): <span id="out_alpha2">0</span> kg/ha</div>
+        <div class="intermediate-item">Soil N Supply (α0): <span id="out_alpha0">0</span> kg/ha/yr</div>
+        <div class="intermediate-item">Max N Uptake (α1): <span id="out_alpha1">0</span> kg/ha/yr</div>
+        <div class="intermediate-item">Immobilisation (α2): <span id="out_alpha2">0</span> kg/ha/yr</div>
     </div>
 
     <div class="chart-container">
@@ -288,7 +288,7 @@
         const nContent = currentRes.DM_Yield > 0 ? (currentRes.N_c * 1000) / currentRes.DM_Yield : 0;
         document.getElementById('out_ncontent').innerText = nContent.toFixed(1);
 
-        // 2. Generate data points for the curves (from 0 to 800 kg/ha N)
+        // 2. Generate data points for the curves (from 0 to 800 kg/ha/yr N)
         const labels = [];
         const dataUptake = [];
         const dataYield = [];
@@ -314,7 +314,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Nitrogen Uptake (kg/ha)',
+                            label: 'Nitrogen Uptake (kg/ha/yr)',
                             data: dataUptake,
                             borderColor: '#e74c3c',
                             backgroundColor: 'transparent',
@@ -324,7 +324,7 @@
                             tension: 0.3
                         },
                         {
-                            label: 'Dry Matter Yield (kg/ha)',
+                            label: 'Dry Matter Yield (kg/ha/yr)',
                             data: dataYield,
                             borderColor: '#2ecc71',
                             backgroundColor: 'transparent',
@@ -353,20 +353,20 @@
                     },
                     scales: {
                         x: {
-                            title: { display: true, text: 'Nitrogen Applied (kg/ha)', font: {weight: 'bold', size: 14} }
+                            title: { display: true, text: 'Nitrogen Applied (kg/ha/yr)', font: {weight: 'bold', size: 14} }
                         },
                         yUptake: {
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: { display: true, text: 'N Uptake (kg/ha)', color: '#e74c3c', font: {weight: 'bold', size: 14} },
+                            title: { display: true, text: 'N Uptake (kg/ha/yr)', color: '#e74c3c', font: {weight: 'bold', size: 14} },
                             grid: { drawOnChartArea: false }
                         },
                         yYield: {
                             type: 'linear',
                             display: true,
                             position: 'right',
-                            title: { display: true, text: 'DM Yield (kg/ha)', color: '#2ecc71', font: {weight: 'bold', size: 14} },
+                            title: { display: true, text: 'DM Yield (kg/ha/yr)', color: '#2ecc71', font: {weight: 'bold', size: 14} },
                             grid: { drawOnChartArea: true, color: 'rgba(0,0,0,0.05)' }
                         }
                     }
