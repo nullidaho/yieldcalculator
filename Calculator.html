@@ -136,7 +136,7 @@
     
     <div class="controls-grid">
         <div class="form-group" style="grid-column: 1 / -1; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 5px;">
-            <label style="font-size: 16px;">Target Nitrogen Applied (kg/ha): <span class="slider-val" id="n_val">200</span></label>
+            <label style="font-size: 16px;">Target Nitrogen Applied (kg/ha): <span class="slider-val" id="n_val">170</span></label>
             <input type="range" id="N_application" min="0" max="800" value="200" step="10" oninput="updateVal('n_val', this.value); updateDashboard();">
         </div>
         
@@ -144,8 +144,8 @@
             <label>Soil Type:</label>
             <select id="Soil_Type" onchange="updateDashboard()">
                 <option value="Sand">Sand</option>
-                <option value="Clay">Clay</option>
-                <option value="Peat">Peat</option>
+                <option value="Clay" selected>Clay</option>
+                <option value="Peat" >Peat</option>
             </select>
         </div>
         <div class="form-group">
@@ -155,7 +155,7 @@
         <div class="form-group">
             <label>Grassland Use:</label>
             <select id="Utilization" onchange="updateDashboard()">
-                <option value="Grazing">Grazing</option>
+                <option value="Grazing" selected>Grazing</option>
                 <option value="Cutting">Cutting</option>
             </select>
         </div>
@@ -178,7 +178,7 @@
             <label>Analysis Method:</label>
             <select id="Analysis_Method" onchange="updateDashboard()">
                 <option value="Total N">Total N</option>
-                <option value="Crude Protein">Crude Protein</option>
+                <option value="Crude Protein" selected>Crude Protein</option>
             </select>
         </div>
     </div>
