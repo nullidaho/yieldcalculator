@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grassland N Uptake & DM Yield Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f4f4f9; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        h1 { 
+            text-align: center; 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
+        .subtitle { 
+            text-align: center; 
+            color: #7f8c8d; 
+            margin-bottom: 30px; 
+        }
+        .controls-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+            background: #fdfdfd;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .form-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        label { 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            font-size: 14px; 
+        }
+        input[type="range"] { 
+            width: 100%; 
+            margin-top: 5px;
+        }
+        select { 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            font-size: 14px; 
+            background-color: white;
+        }
+        .slider-val {
+            color: #2980b9;
+            font-weight: bold;
+        }
+        
+        /* Highlighted Results Section */
+        .results-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .results-container { flex-direction: column; }
+        }
+        .main-metric {
+            flex: 1;
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .metric-nc { border-left-color: #e74c3c; }
+        .metric-dm { border-left-color: #2ecc71; }
+        
+        .metric-title {
+            font-size: 14px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .metric-unit {
+            font-size: 16px;
+            color: #95a5a6;
+        }
+
+        /* Intermediate Values Section */
+        .intermediate-values {
+            display: flex;
+            justify-content: space-around;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #555;
+            border: 1px dashed #ccc;
+        }
+        .intermediate-item span {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .chart-container { 
+            position: relative; 
+            height: 450px; 
+            width: 100%; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Grassland Nitrogen Model</h1>
+    <div class="subtitle">Based on Vellinga and André (1999)</div>
+    
+    <div class="controls-grid">
+        <div class="form-group" style="grid-column: 1 / -1; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 5px;">
+            <label style="font-size: 16px;">Target Nitrogen Applied (kg/ha): <span class="slider-val" id="n_val">200</span></label>
+            <input type="range" id="N_application" min="0" max="800" value="200" step="10" oninput="updateVal('n_val', this.value); updateDashboard();">
+        </div>
+        
+        <div class="form-group">
+            <label>Soil Type:</label>
+            <select id="Soil_Type" onchange="updateDashboard()">
+                <option value="Sand">Sand</option>
+                <option value="Clay">Clay</option>
+                <option value="Peat">Peat</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Organic Matter (%): <span class="slider-val" id="om_val">10</span></label>
+            <input type="range" id="Organic_Matter" min="1" max="50" value="10" oninput="updateVal('om_val', this.value); updateDashboard();">
+        </div>
+        <div class="form-group">
+            <label>Grassland Use:</label>
+            <select id="Utilization" onchange="updateDashboard()">
+                <option value="Cutting">Cutting</option>
+                <option value="Grazing">Grazing</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Cuts per Year: <span class="slider-val" id="cuts_val">5</span></label>
+            <input type="range" id="Cuts_per_year" min="2" max="10" value="5" oninput="updateVal('cuts_val', this.value); updateDashboard();">
+        </div>
+        <div class="form-group">
+            <label>Grassland Renovation:</label>
+            <select id="Renovation" onchange="updateDashboard()">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>White Clover (%): <span class="slider-val" id="wc_val">0</span></label>
+            <input type="range" id="White_Clover" min="0" max="100" value="0" oninput="updateVal('wc_val', this.value); updateDashboard();">
+        </div>
+        <div class="form-group">
+            <label>Analysis Method:</label>
+            <select id="Analysis_Method" onchange="updateDashboard()">
+                <option value="Total N">Total N</option>
+                <option value="Crude Protein">Crude Protein</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="results-container">
+        <div class="main-metric metric-nc">
+            <div class="metric-title">Calculated Nitrogen Uptake (Nc)</div>
+            <div class="metric-value" id="out_nc">0</div>
+            <div class="metric-unit">kg/ha</div>
+        </div>
+        <div class="main-metric metric-dm">
+            <div class="metric-title">Theoretical Dry Matter Yield</div>
+            <div class="metric-value" id="out_dm">0</div>
+            <div class="metric-unit">kg/ha</div>
+        </div>
+    </div>
+
+    <div class="intermediate-values">
+        <div class="intermediate-item">Soil N Supply (α0): <span id="out_alpha0">0</span> kg/ha</div>
+        <div class="intermediate-item">Max N Uptake (α1): <span id="out_alpha1">0</span> kg/ha</div>
+        <div class="intermediate-item">Immobilisation (α2): <span id="out_alpha2">0</span> kg/ha</div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="responseChart"></canvas>
+    </div>
+</div>
+
+<script>
+    let chartInstance = null;
+
+    function updateVal(id, val) {
+        document.getElementById(id).innerText = val;
+    }
+
+    // Core mathematics derived from Vellinga and André (1999)
+    function getModelValues(N_app, Soil, OM, Util, Cuts, Renov, WC, Analysis) {
+        const S_peat = Soil === 'Peat' ? 1 : 0;
+        const S_sand = Soil === 'Sand' ? 1 : 0;
+        const C = Cuts - 5;
+        const G = Util === 'Grazing' ? 1 : 0;
+        const R = Renov === 'Yes' ? 1 : 0;
+
+        // --- Nitrogen Uptake Parameters ---
+        const om0_sand_effect = S_sand ? -0.735 : 0;
+        const wc0_sand_effect = S_sand ? 0.00364 : 0;
+        const alpha_0 = 192.45 * (1 - Math.exp(-(0.984 + om0_sand_effect) * OM)) * Math.exp(0.2691 * S_peat + 0.1335 * G + wc0_sand_effect * WC);
+
+        const g1_peat_effect = S_peat ? 0.2324 : 0;
+        const alpha_1 = 696.2 * Math.exp(-0.004944 * OM + 0.1407 * C - 0.4217 * G + g1_peat_effect * G + 0.2017 * R);
+
+        const alpha_2 = 51.42 * Math.exp(0.04050 * WC + 0.661 * R);
+
+        // --- Nitrogen Uptake Calculation ---
+        const N_b = N_app - alpha_2 * (1 - Math.exp(-N_app / alpha_2));
+        
+        let N_m = alpha_0;
+        if (alpha_1 > alpha_0) {
+            N_m = alpha_0 + (alpha_1 - alpha_0) * (1 - Math.exp(-N_b / (alpha_1 - alpha_0)));
+        }
+
+        const lambda_1 = Analysis === 'Crude Protein' ? 0.0000445 : 0;
+        const N_c = N_m * Math.exp(-lambda_1 * N_m);
+
+        // --- DM Yield Parameters ---
+        const beta_0 = 0.018750 * Math.exp(0.04143 * C - 0.0926 * S_peat - 0.2108 * S_sand + 0.1875 * G + 0.0977 * R);
+        const beta_1 = 31418 * Math.exp(0.0342 * C - 0.0860 * S_peat - 0.2141 * S_sand + 0.2295 * G + 0.2803 * R);
+        const rho = 0.006400 * Math.exp(1.218 * C + 3.794 * S_peat + 2.862 * S_sand + 0.0871 * WC);
+
+        // --- DM Yield Calculation ---
+        const lambda_2 = Analysis === 'Crude Protein' ? 0.0001496 : 0;
+        const Yield_Nc = N_m * Math.exp(-lambda_2 * N_m); // Adjusted N uptake based on method
+        const DM_Yield = 1 / ((beta_0 / Yield_Nc) + (1 / beta_1) * (1 - Math.exp(-rho * Yield_Nc)));
+
+        return { alpha_0, alpha_1, alpha_2, N_c, DM_Yield };
+    }
+
+    function getFormValues() {
+        return {
+            N_app: parseFloat(document.getElementById('N_application').value),
+            Soil: document.getElementById('Soil_Type').value,
+            OM: parseFloat(document.getElementById('Organic_Matter').value),
+            Util: document.getElementById('Utilization').value,
+            Cuts: parseFloat(document.getElementById('Cuts_per_year').value),
+            Renov: document.getElementById('Renovation').value,
+            WC: parseFloat(document.getElementById('White_Clover').value),
+            Analysis: document.getElementById('Analysis_Method').value
+        };
+    }
+
+    function updateDashboard() {
+        const v = getFormValues();
+        
+        // 1. Update the single target values in the UI panels
+        const currentRes = getModelValues(v.N_app, v.Soil, v.OM, v.Util, v.Cuts, v.Renov, v.WC, v.Analysis);
+        
+        document.getElementById('out_alpha0').innerText = currentRes.alpha_0.toFixed(1);
+        document.getElementById('out_alpha1').innerText = currentRes.alpha_1.toFixed(1);
+        document.getElementById('out_alpha2').innerText = currentRes.alpha_2.toFixed(1);
+        document.getElementById('out_nc').innerText = currentRes.N_c.toFixed(1);
+        document.getElementById('out_dm').innerText = currentRes.DM_Yield.toFixed(0);
+
+        // 2. Generate data points for the curves (from 0 to 800 kg/ha N)
+        const labels = [];
+        const dataUptake = [];
+        const dataYield = [];
+        
+        for (let n = 0; n <= 800; n += 20) {
+            labels.push(n);
+            const res = getModelValues(n, v.Soil, v.OM, v.Util, v.Cuts, v.Renov, v.WC, v.Analysis);
+            dataUptake.push(res.N_c);
+            dataYield.push(res.DM_Yield);
+        }
+
+        // 3. Draw or update Chart.js
+        if (chartInstance) {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = dataUptake;
+            chartInstance.data.datasets[1].data = dataYield;
+            chartInstance.update();
+        } else {
+            const ctx = document.getElementById('responseChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Nitrogen Uptake (kg/ha)',
+                            data: dataUptake,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'transparent',
+                            borderWidth: 3,
+                            yAxisID: 'yUptake',
+                            pointRadius: 0,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Dry Matter Yield (kg/ha)',
+                            data: dataYield,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'transparent',
+                            borderWidth: 3,
+                            yAxisID: 'yYield',
+                            pointRadius: 0,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { 
+                        mode: 'index', 
+                        intersect: false 
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Nitrogen Applied (kg/ha)', font: {weight: 'bold', size: 14} }
+                        },
+                        yUptake: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'N Uptake (kg/ha)', color: '#e74c3c', font: {weight: 'bold', size: 14} },
+                            grid: { drawOnChartArea: false }
+                        },
+                        yYield: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'DM Yield (kg/ha)', color: '#2ecc71', font: {weight: 'bold', size: 14} },
+                            grid: { drawOnChartArea: true, color: 'rgba(0,0,0,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Initialize the dashboard on first load
+    updateDashboard();
+</script>
+</body>
+</html>
